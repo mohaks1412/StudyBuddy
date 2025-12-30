@@ -1,24 +1,25 @@
-// lib/otp-store.ts
-const otpStore = new Map<string, { code: string; expires: number }>();
+
+import { Redis } from '@upstash/redis';
+
+const otpStore = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 export const otpStorage = {
   set: async (email: string, code: string, ttlSeconds = 600) => {
-    otpStore.set(email, {
-      code,
-      expires: Date.now() + ttlSeconds * 1000
-    });
+    
+    await otpStore.del(email);
+    await otpStore.setex(email, ttlSeconds, code);
   },
   
   get: async (email: string) => {
-    const data = otpStore.get(email);
-    if (!data || Date.now() > data.expires) {
-      otpStore.delete(email);
-      return null;
-    }
-    return data.code;
+    const code = await otpStore.get(email) as string | null;
+    
+    return code || null;
   },
   
   delete: async (email: string) => {
-    otpStore.delete(email);
+    await otpStore.del(email);
   }
 };

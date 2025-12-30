@@ -7,10 +7,9 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   multiline?: boolean;
-  className?: string;  // custom styles
+  className?: string;
 }
 
-// Keeping the original logic structure and props
 export default function Input({
   label,
   error,
@@ -19,30 +18,37 @@ export default function Input({
   readOnly,
   ...rest
 }: InputProps) {
-  // === STYLES ONLY MODIFIED FOR DARK MODE (TEAL/DARK GREY) ===
-  const baseStyles =
-    // Darker background, light text, soft border, modern padding
-    "w-full bg-gray-800 border border-gray-700 text-gray-100 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all shadow-md";
+  
+  // === STYLES UPDATED TO USE GLOBAL THEME VARIABLES ===
+  const baseStyles = clsx(
+    "w-full px-4 py-3 rounded-xl text-base transition-all duration-300 shadow-sm outline-none",
+    "bg-[rgb(var(--color-bg-soft)/0.5)] border border-[rgb(var(--color-border)/0.6)] text-[rgb(var(--color-fg))]",
+    "placeholder:text-[rgb(var(--color-fg-muted)/0.4)]",
+    "focus:ring-2 focus:ring-[rgb(var(--color-accent)/0.2)] focus:border-[rgb(var(--color-accent))]"
+  );
 
   const computedStyles = clsx(
     baseStyles,
-    // Read Only State
-    readOnly && "bg-gray-700 cursor-not-allowed opacity-75",
-    // Error State
-    error && "border-red-500 focus:ring-red-500 focus:border-red-500",
-    className // allow overrides
+    // Read Only State - Logic Unchanged
+    readOnly && "bg-[rgb(var(--color-bg-strong)/0.1)] cursor-not-allowed opacity-60 grayscale",
+    // Error State - Logic Unchanged
+    error && "border-[rgb(var(--color-danger))] focus:ring-[rgb(var(--color-danger)/0.2)] focus:border-[rgb(var(--color-danger))]",
+    className
   );
-  // ==========================================================
 
   return (
-    // Updated container styles for dark mode text and modern spacing
-    <div className="space-y-2"> 
-      {/* Updated label to use the teal accent color */}
-      {label && <label className="text-sm font-semibold text-teal-400">{label}</label>}
+    <div className="group space-y-2 w-full"> 
+      {/* Label styled with theme-aware accent color */}
+      {label && (
+        <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[rgb(var(--color-accent))] ml-1">
+          {label}
+        </label>
+      )}
 
       {multiline ? (
         <textarea
-          className={computedStyles}
+          rows={4}
+          className={clsx(computedStyles, "resize-none min-h-[120px]")}
           readOnly={readOnly}
           {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
         />
@@ -54,8 +60,12 @@ export default function Input({
         />
       )}
 
-      {/* Updated error text color for dark mode readability */}
-      {error && <p className="text-xs font-medium text-red-400">{error}</p>}
+      {/* Error text using theme danger color */}
+      {error && (
+        <p className="text-xs font-bold text-[rgb(var(--color-danger))] ml-1 animate-in fade-in slide-in-from-top-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

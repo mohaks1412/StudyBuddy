@@ -1,9 +1,9 @@
-import mongoose from "mongoose"
+import mongoose, {Schema} from "mongoose"
 
 const textPostSchema = new mongoose.Schema({
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   title: { type: String, required: true },
-  content: { type: String, required: true, maxlength: 10000 }, // Rich text
+  content: { type: String, required: true, maxlength: 10000 }, 
   type: { 
     type: String, 
     enum: ["question", "answer"], 
@@ -11,7 +11,11 @@ const textPostSchema = new mongoose.Schema({
   },
   subject: String,
   associate: [{ type: mongoose.Schema.Types.ObjectId, ref: "TextPost" }],
-  community: { type: String, default: null },
+  community: {
+    type: Schema.Types.ObjectId,
+    ref: 'Community',
+    default: null  // Global posts = null
+  }
 }, { timestamps: true })
 
 export default mongoose.models.TextPost || mongoose.model("TextPost", textPostSchema)

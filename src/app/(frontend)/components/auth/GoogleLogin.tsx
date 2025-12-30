@@ -9,7 +9,7 @@ export function GoogleLogin({ className = "" }: { className?: string }) {
         e.preventDefault();
         try{
         const res = await signIn("google", { 
-          callbackUrl: "/dashboard" 
+          callbackUrl: "/posts" 
         });
 
         console.log(res);

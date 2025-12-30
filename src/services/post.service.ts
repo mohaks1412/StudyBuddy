@@ -4,11 +4,37 @@ import DocPostModel from "@/models/DocPost.model"
 import { TextPostSchema, DocPostSchema } from "@/schemas/post.schema"
 import type { TextPost, DocPost, PostId } from "../app/types/post"
 import {z} from "zod";
+import {del} from '@vercel/blob';
+import { Types } from "mongoose"
+import Community from "@/models/Community.model"
 
 class PostService {
-  /**
-   * Create text-based post (question, answer, note)
-   */
+
+
+  normalizePostIds(post: any) {
+    if (post._id instanceof Types.ObjectId) {
+      post._id = post._id.toString();
+    }
+
+    
+    if (post.community instanceof Types.ObjectId) {
+      post.community = post.community.toString();
+    }
+
+    
+    if (post.authorId && post.authorId._id instanceof Types.ObjectId) {
+      post.authorId._id = post.authorId._id.toString();
+    }
+
+    
+    if (post.authorId instanceof Types.ObjectId) {
+      post.authorId = post.authorId.toString();
+    }
+
+    return post;
+  }
+  
+
   async createTextPost(
     authorId: string,
     data: z.infer<typeof TextPostSchema>
@@ -22,9 +48,7 @@ class PostService {
     })
   }
 
-  /**
-   * Create document post (question paper)
-   */
+  
   async createDocPost(
     authorId: string,
     data: z.infer<typeof DocPostSchema>
@@ -38,9 +62,7 @@ class PostService {
     })
   }
 
-  /**
-   * Fetch all user's posts (both text + docs)
-   */
+  
   async fetchPostsByUser(
     userId: string,
     options: {
@@ -52,7 +74,7 @@ class PostService {
     await dbConnect()
     const { type, limit = 20, page = 1 } = options
 
-    // Fetch both models based on type
+    
     const [textPosts, docPosts] = await Promise.all([
       TextPostModel.find({ 
         authorId: userId,
@@ -75,74 +97,122 @@ class PostService {
     return [...textPosts, ...docPosts] as (TextPost | DocPost)[]
   }
 
-  /**
-   * Fetch single post by ID (handles both models)
-   */
+  
   async fetchPostById(postId: PostId): Promise<TextPost | DocPost | null> {
     await dbConnect()
     
     const textPost = await TextPostModel.findById(postId)
-      .populate("authorId", "username email")
-      .populate("associate", "title content authorId")
+      .populate("authorId", "username _id")
+      .populate({
+        path: "associate",
+        populate: {
+          path: "authorId",
+          select: "username _id",
+        },
+      })
+      .lean();
     
-    if (textPost) return textPost
-
+    if (textPost) return textPost 
     return DocPostModel.findById(postId)
       .populate("authorId", "username email")
   }
 
-  /**
-   * Update text post (owner only)
-   */
-  async updateTextPost(
-    postId: PostId,
-    userId: string,
-    data: Partial<z.infer<typeof TextPostSchema>>
-  ): Promise<TextPost | null> {
-    await dbConnect()
-    return TextPostModel.findOneAndUpdate(
-      { _id: postId, authorId: userId },
-      data,
-      { new: true, runValidators: true }
-    )
+  async updatePost(postId: PostId, userId: string, updateData: {
+    title: string;
+    subject?: string;
+    content?: string;
+    summary?: string;
+    fileurl?: string;
+  }): Promise<TextPost | DocPost | null> {
+    await dbConnect();
+    
+
+    const [textPost, docPost] = await Promise.all([
+      TextPostModel.findOne({ _id: postId, authorId: userId }),
+      DocPostModel.findOne({ _id: postId, authorId: userId })
+    ]);
+
+    const post = textPost || docPost;
+    if (!post) throw new Error("Post not found or unauthorized");
+
+    if (docPost && (docPost.type === "notes" || docPost.type === "question-paper")) {
+
+      if (updateData.fileurl && docPost.fileUrl) {
+        try {
+          await del(docPost.fileUrl);
+        } catch (error) {
+          console.warn("Old blob delete failed:", error);
+        }
+      }
+
+      const newFileUrl = updateData.fileurl ? updateData.fileurl : docPost.fileUrl;
+
+      
+      return DocPostModel.findOneAndUpdate(
+        { _id: postId, authorId: userId },
+        {
+          title: updateData.title,
+          subject: updateData.subject,
+          summary: updateData.summary,
+          fileUrl: newFileUrl,
+        },
+        { new: true, runValidators: true }
+      )?.populate("authorId", "username email");
+    }
+
+    if (textPost) {
+      return TextPostModel.findOneAndUpdate(
+        { _id: postId, authorId: userId },
+        {
+          title: updateData.title,
+          subject: updateData.subject,
+          content: updateData.content,
+        },
+        { new: true, runValidators: true }
+      )?.populate("authorId", "username email");
+    }
+
+    throw new Error("Invalid post type");
   }
 
-  /**
-   * Update doc post (owner only)
-   */
-  async updateDocPost(
-    postId: PostId,
-    userId: string,
-    data: Partial<z.infer<typeof DocPostSchema>>
-  ): Promise<DocPost | null> {
-    await dbConnect()
-    return DocPostModel.findOneAndUpdate(
-      { _id: postId, authorId: userId },
-      data,
-      { new: true, runValidators: true }
-    )
-  }
+async deletePost(postId: PostId, userId: string): Promise<boolean> {
+    await dbConnect();
 
-  /**
-   * Delete post (owner only)
-   */
-  async deletePost(postId: PostId, userId: string): Promise<boolean> {
-    await dbConnect()
+    const [textPost, docPost] = await Promise.all([
+        TextPostModel.findOne({ _id: postId, authorId: userId }),
+        DocPostModel.findOne({ _id: postId, authorId: userId })
+    ]);
+
     
-    const deletedText = await TextPostModel.findOneAndDelete({ 
-      _id: postId, 
-      authorId: userId 
-    })
+    if (docPost?.fileUrl) {
+        try {
+            await del(docPost.fileUrl);
+        } catch (error) {
+            console.warn("Blob delete failed:", error);
+        }
+    }
+
     
-    if (deletedText) return true
-    
-    const deletedDoc = await DocPostModel.findOneAndDelete({ 
-      _id: postId, 
-      authorId: userId 
-    })
-    
-    return !!deletedDoc
-  }
+    if (docPost) {
+        await DocPostModel.findOneAndDelete({ _id: postId, authorId: userId });
+        return true;
+    }
+
+    if (textPost) {
+      
+        if (textPost.type === "question") {
+          
+            await TextPostModel.deleteMany({ 
+                _id: { $in: textPost.associate || [] } 
+            });
+        }
+        
+        await TextPostModel.findOneAndDelete({ _id: postId, authorId: userId });
+        return true;
+    }
+
+    return false;
+}
 
   async fetchFeedForUser(
     userId: string,
@@ -175,41 +245,65 @@ class PostService {
     return [...textPosts, ...docPosts] as (TextPost | DocPost)[]
   }
 
-   async fetchPostsByCommunity(
-    community: string,
-    options: {
-      type?: "question" | "answer" | "notes" | "question-paper"
-      limit?: number
-      page?: number
-    } = {}
-  ): Promise<(TextPost | DocPost)[]> {
-    await dbConnect()
-    const { type, limit = 20, page = 1 } = options
 
-    const [textPosts, docPosts] = await Promise.all([
-      TextPostModel.find({
-        community,
-        ...(type === "question" || type === "answer" ? { type } : {}),
-      })
-        .populate("authorId", "username email")
+async fetchRecentPosts(options: { limit?: number; page?: number } = {}) {
+  await dbConnect();
+  const { limit = 20, page = 1 } = options;
+
+  const [textPosts, docPosts] = await Promise.all([
+    TextPostModel.find({})
+      .populate("authorId", "username email")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit),
+
+    DocPostModel.find({})
+      .populate("authorId", "username email")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit),
+  ]);
+
+  return [...textPosts, ...docPosts] as (TextPost | DocPost)[];
+}
+
+
+  async fetchPostsByCommunity(communityId: string, options: { limit?: number; page?: number } = {}) {
+    await dbConnect();
+    
+    const communityObjectId = new Types.ObjectId(communityId);
+    const community = await Community.findById(communityObjectId);
+    if (!community) return [];
+
+    const limit = options.limit || 20;
+    const skip = (options.page || 1 - 1) * limit;
+
+    const [docPosts, textPosts] = await Promise.all([
+      DocPostModel.find({ community: community._id })
+        .populate('authorId', 'username email avatar')
         .sort({ createdAt: -1 })
         .limit(limit)
-        .skip((page - 1) * limit),
+        .skip(skip)
+        .lean(),
 
-      type === "question-paper" || type === "notes"
-        ? DocPostModel.find({
-            community,
-            ...(type && { type }),
-          })
-            .populate("authorId", "username email")
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .skip((page - 1) * limit)
-        : Promise.resolve([]),
-    ])
+      TextPostModel.find({ community: community._id })
+        .populate('authorId', 'username email avatar')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
+        .lean()
+    ]);
 
-    return [...textPosts, ...docPosts] as (TextPost | DocPost)[]
+    const merged = [...docPosts, ...textPosts].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    
+    return merged.map(this.normalizePostIds);
   }
+
+
   
   async countByAuthor(userId: string) {
     const [textPostCount, docPostCount] = await Promise.all([
@@ -220,7 +314,47 @@ class PostService {
     return textPostCount + docPostCount
   }
 
+ async createAnswer(
+    authorId: string,
+    data: {
+      questionId: string;
+      content: string;
+      title?: string;
+      subject?: string | null;
+      community?: string | null;
+    }
+  ): Promise<TextPost> {
+    const { questionId, content, title, subject, community } = data;
 
+    if (!questionId) throw new Error("questionId is required");
+    if (!content || !content.trim()) throw new Error("content is required");
+
+    await dbConnect();
+
+    const questionObjectId = new Types.ObjectId(questionId);
+
+    const question = await TextPostModel.findById(questionObjectId);
+    if (!question || question.type !== "question") {
+      throw new Error("Parent question not found or invalid");
+    }
+
+    const answer = await TextPostModel.create({
+      authorId,
+      title: title && title.trim().length ? title : `Answer: ${question.title}`,
+      content,
+      type: "answer",
+      subject: subject ?? question.subject,
+      community: community ?? question.community,
+      associate: [question._id],
+    });
+    
+    question.associate.push(answer._id);
+    await question.save();
+
+    await answer.populate("authorId", "username email");
+
+    return answer as TextPost;
+  }
 }
 
 export default new PostService();

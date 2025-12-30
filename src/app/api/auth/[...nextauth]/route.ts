@@ -1,10 +1,9 @@
-// app/api/auth/[...auth]/route.ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import authService from "@/services/auth.service";
 
-export const authOptions : NextAuthOptions={
+export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   providers: [
     Credentials({
@@ -13,10 +12,26 @@ export const authOptions : NextAuthOptions={
       credentials: {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
+        otp: { label: "OTP", type: "text" } 
       },
       authorize: async (credentials) => {
         try {
-          if (!credentials?.identifier || !credentials.password) return null;
+          if (!credentials?.identifier) return null;
+
+          if (credentials.otp) {
+            const user = await authService.findUserByEmailOrUsername(credentials.identifier);
+            if (user && user.isVerified) {
+              return {
+                id: user._id.toString(),
+                email: user.email,
+                username: user.username,
+                isVerified: user.isVerified
+              };
+            }
+            return null;
+          }
+
+          if (!credentials.password) return null;
           const user = await authService.loginWithCredentials(
             credentials.identifier,
             credentials.password
@@ -35,12 +50,18 @@ export const authOptions : NextAuthOptions={
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "select_account",  
+          scope: "openid email profile",
+          access_type: "offline"
+        }
+      }
     }),
   ],
   pages: { signIn: "/sign-in" },
   callbacks: {
-    async jwt({ token, user, account, profile }:any) {
-      // Credentials login
+    async jwt({ token, user, account, profile }: any) {
       if (user && account?.provider === "credentials") {
         token._id = user.id;
         token.username = (user as any).username;
@@ -48,7 +69,6 @@ export const authOptions : NextAuthOptions={
         return token;
       }
 
-      // Google login – only when profile is present
       if (account?.provider === "google" && profile && (profile as any).email) {
         const p = profile as { name?: string; email: string };
 
@@ -66,11 +86,10 @@ export const authOptions : NextAuthOptions={
         return token;
       }
 
-      // Subsequent calls (no account/profile/user), just keep existing token
       return token;
     },
 
-    async session({ session, token }:any) {
+    async session({ session, token }: any) {
       session.user._id = token._id;
       session.user.username = token.username;
       session.user.isVerified = token.isVerified;

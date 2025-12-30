@@ -1,4 +1,4 @@
-// models/friendRequest.model.ts
+
 import { Schema, model, models, Types } from "mongoose"
 
 export type FriendRequestStatus = "pending" | "accepted" | "rejected"
@@ -16,7 +16,6 @@ const FriendRequestSchema = new Schema(
   { timestamps: true }
 )
 
-// prevent duplicates while pending/accepted
 FriendRequestSchema.index({ from: 1, to: 1 }, { unique: true })
 
 export default models.FriendRequest ||

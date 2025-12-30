@@ -1,17 +1,21 @@
-import { Resend } from "resend";
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, 
+  auth: {
+    user: process.env.GMAIL_USERNAME!,
+    pass: process.env.GMAIL_APP_PASSWORD!, 
+  },
+});
 
-export async function sendVerificationEmail(
+export async function sendVerificationEmail(email: string, otp: string) {
+  console.log("Sending verification email to", email, "with otp", otp);
   
-  email: string,
-  otp: string
-) {
-  
-  console.log("Sending verification email to", email, "with otp", otp)
   try {
-    const result = await resend.emails.send({
-      from: "YourApp <no-reply@mohaksharma.dev.com>",
+    await transporter.sendMail({
+      from: '"Mohak Sharma" <mohaksharma1412@gmail.com>',
       to: email,
       subject: "Verify your email",
       html: `
@@ -25,14 +29,11 @@ export async function sendVerificationEmail(
         </div>
       `,
     });
-
-
-    console.log("Email result", result);
     
-
+    console.log("Email sent successfully");
     return true;
   } catch (error: any) {
-    console.log("Email error", error);
+    console.error("Email error", error);
     return false;
   }
 }

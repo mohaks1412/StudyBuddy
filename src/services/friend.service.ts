@@ -1,4 +1,3 @@
-// services/friend.service.ts
 import dbConnect from "@/lib/dbConnect"
 import User from "@/models/user.model"
 import FriendRequest from "@/models/FriendRequest.model"
@@ -16,7 +15,6 @@ class FriendService {
     if (existing && existing.status === "pending")
       throw new Error("Request already sent")
 
-    // also avoid if already friends
     const fromUser = await User.findById(from)
     if (fromUser?.friends?.some((f: any) => f.equals(to)))
       throw new Error("Already friends")
@@ -36,7 +34,7 @@ class FriendService {
 
     if (accept) {
 
-      // make them mutual friends
+      
       await User.findByIdAndUpdate(req.from, {
         $addToSet: { friends: req.to },
       })
@@ -44,37 +42,65 @@ class FriendService {
         $addToSet: { friends: req.from },
       })
     }
-      // reject: remove the request document entirely
       await FriendRequest.findByIdAndDelete(requestId)
   }
 
 
-  async getIncoming(userId: string) {
-    await dbConnect()
-    return FriendRequest.find({ to: userId, status: "pending" })
-      .populate("from", "name username")
-      .lean()
-  }
 
-  async getOutgoing(userId: string) {
-    await dbConnect()
-    return FriendRequest.find({ from: userId, status: "pending" })
-      .populate("to", "name username")
-      .lean()
-  }
+async getIncoming(userId: string) {
+  await dbConnect();
+  const requests = await FriendRequest.find({ to: userId, status: "pending" })
+    .populate("from", "name username avatar _id") 
+    .lean();
 
-  async getFriends(userId: string) {
-    await dbConnect()
-    const user = await User.findById(userId)
-      .populate({ path: "friends", strictPopulate: false })
-      .lean()
-    return user?.friends ?? []
-  }
+    
+  return requests.map((req: any) => ({
+    _id: req._id.toString(),
+    from: {
+      _id: req.from._id.toString(),
+      name: req.from.name,
+      username: req.from.username,
+      avatar: req.from.avatar
+    }
+  }));
+}
+
+async getOutgoing(userId: string) {
+  await dbConnect();
+  const requests = await FriendRequest.find({ from: userId, status: "pending" })
+    .populate("to", "name username avatar _id")
+    .lean();
+
+  return requests.map((req: any) => ({
+    _id: req._id.toString(),
+    to: {
+      _id: req.to._id.toString(),
+      name: req.to.name,
+      username: req.to.username,
+      avatar: req.to.avatar
+    }
+  }));
+}
+
+async getFriends(userId: string) {
+  await dbConnect();
+  const user = await User.findById(userId)
+    .populate("friends", "name username avatar _id")
+    .lean();
+
+  return (user?.friends || []).map((friend: any) => ({
+    _id: friend._id.toString(),
+    name: friend.name,
+    username: friend.username,
+    avatar: friend.avatar
+  }));
+}
+
 
   async getStatus(myId: string, otherId: string): Promise<string> {
     await dbConnect()
 
-    // 1) Pending? (only state stored in FriendRequest now)
+    
     const pending = await FriendRequest.findOne({
       from: myId,
       to: otherId,
@@ -84,7 +110,7 @@ class FriendService {
 
     if (pending) return "pending"
 
-    // 2) Accepted? (encoded in friends list)
+    
     const me = await User.findById(myId).select("friends").lean()
     const isFriend =
       me?.friends &&
@@ -92,19 +118,18 @@ class FriendService {
 
     if (isFriend) return "accepted"
 
-    // 3) Otherwise treated as rejected / no relation
+    
     return "rejected"
   }
 
     async removeFriend(myId: string, friendId: string) {
     await dbConnect()
-
-    // remove friendId from my friends
+    
     await User.findByIdAndUpdate(myId, {
       $pull: { friends: friendId },
     })
 
-    // remove myId from friend's friends
+    
     await User.findByIdAndUpdate(friendId, {
       $pull: { friends: myId },
     })

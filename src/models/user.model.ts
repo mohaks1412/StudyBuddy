@@ -12,6 +12,7 @@ export interface IUser extends Document {
   friends: Types.ObjectId[]  
   createdAt: Date
   updatedAt: Date
+  community ?: Types.ObjectId[]
 }
 
 const UserSchema = new Schema<IUser>(
@@ -25,6 +26,11 @@ const UserSchema = new Schema<IUser>(
     college: { type: String, default: null },
     major: { type: String, default: null },
     bio: { type: String, default: null, maxlength: 500 },
+      community: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Community',
+        default: [] 
+      }]
   },
   { timestamps: true }
 )

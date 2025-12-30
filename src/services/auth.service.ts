@@ -3,6 +3,7 @@ import UserModel, { IUser } from "../models/user.model";
 import dbConnect from "@/lib/dbConnect";
 import { otpStorage } from "@/lib/otp-store";
 import { string } from "zod";
+import { log } from "util";
 
 class AuthService {
   async findUserByEmailOrUsername(identifier: string): Promise<IUser | null> {
@@ -15,7 +16,7 @@ class AuthService {
 
   async findUserById(userId: string): Promise<IUser | null> {
     await dbConnect()
-    // lean() for plain object; remove it if you want full Mongoose document
+    
     const user = await UserModel.findById(userId).lean<IUser | null>()
     console.log(user);
     
@@ -57,14 +58,14 @@ class AuthService {
     generateBaseName(name: string) {
         return name
         .toLowerCase()
-        .replace(/\s+/g, "")       // remove spaces
-        .replace(/[^a-z0-9]/g, ""); // remove non-alphanumeric
+        .replace(/\s+/g, "")       
+        .replace(/[^a-z0-9]/g, ""); 
+        
     }
 
     async generateUniqueUsername(name: string): Promise<string> {
         const base = this.generateBaseName(name);
 
-        // Get all similar usernames
         const users = await UserModel.find(
             { username: new RegExp(`^${base}\\d*$`, "i") },
             { username: 1, _id: 0 }
@@ -74,7 +75,6 @@ class AuthService {
             return `${base}1`;
         }
 
-        // Extract numeric suffixes
         const numbers = users
             .map((u) => {
             const match = u.username.match(new RegExp(`^${base}(\\d+)$`, "i"));
@@ -112,22 +112,21 @@ class AuthService {
     }
     
     async verifyOTP(email: string, otp: string): Promise<boolean> {
-      await dbConnect(); // not strictly needed for Redis but safe
+      await dbConnect(); 
 
       const storedOtp = await otpStorage.get(email)
 
+      
       if (!storedOtp) {
         throw new Error("OTP expired or not found");
       }
-
-      if (storedOtp !== otp) {
+      
+      if (storedOtp.toString() !== otp.toString()) {
         throw new Error("Invalid OTP");
       }
 
-      // OTP matched → delete it to prevent reuse
       await otpStorage.delete(email);
 
-      // Also mark user as verified
       await UserModel.findOneAndUpdate(
         { email },
         { isVerified: true },
@@ -163,6 +162,7 @@ class AuthService {
     data: Partial<Pick<IUser, "college" | "major" | "bio">>
   ): Promise<IUser | null> {
     await dbConnect()
+    
     const updated = await UserModel.findByIdAndUpdate(
       id,
       {

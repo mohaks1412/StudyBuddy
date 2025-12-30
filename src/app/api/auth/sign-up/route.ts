@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     }
 
     const { name, email, password } = parsed.data;
+    
 
     // 2. make sure email doesnt get duplicate
     const userAlreadyExists = await authService.findUserByEmailOrUsername(email);

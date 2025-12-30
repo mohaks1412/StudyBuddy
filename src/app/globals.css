@@ -1,26 +1,61 @@
+/* globals.css */
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* 🌤️ LIGHT — bisque-beige-coffee */
+    --color-bg: 250 245 235;
+    --color-bg-soft: 245 240 230;
+    --color-bg-strong: 220 210 195;
+    --color-fg: 45 35 25;
+    --color-fg-muted: 115 105 90;
+    --color-fg-subtle: 90 80 70;
+    
+    /* Light theme: muted coffee accent */
+    --color-accent: 120 100 80;        /* warm coffee brown */
+    --color-accent-fg: 250 245 235;
+    
+    --color-success: 30 170 100;
+    --color-success-fg: 250 245 235;
+    --color-warning: 220 140 40;
+    --color-warning-fg: 45 35 25;
+    --color-danger: 200 50 60;
+    --color-danger-fg: 250 245 235;
+    --color-border: 220 210 195;
+    --color-ring: 120 100 80;          /* coffee ring */
+  }
+
+  .dark {
+    /* 🌙 DARK — greyish-blue + greenish-teal */
+    --color-bg: 18 22 25;
+    --color-bg-soft: 28 33 38;
+    --color-bg-strong: 55 65 70;
+    --color-fg: 240 245 240;
+    --color-fg-muted: 165 180 175;
+    --color-fg-subtle: 140 155 150;
+    
+    /* Dark theme: vibrant teal accent */
+    --color-accent: 50 215 195;        /* greenish-teal */
+    --color-accent-fg: 18 22 25;
+    
+    --color-success: 60 200 140;
+    --color-success-fg: 18 22 25;
+    --color-warning: 230 160 60;
+    --color-warning-fg: 18 22 25;
+    --color-danger: 240 90 90;
+    --color-danger-fg: 18 22 25;
+    --color-border: 55 65 70;
+    --color-ring: 50 215 195;
+  }
+
+  body {
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-fg));
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .border-border {
+    border-color: rgb(var(--color-border));
+  }
 }
