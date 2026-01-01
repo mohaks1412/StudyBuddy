@@ -45,7 +45,7 @@ export default async function FriendsPage({ params }: FriendsPageProps) {
     <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[rgb(var(--color-border)/0.3)]">
             <div className="space-y-2">
               
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight block bg-gradient-to-r from-[rgb(var(--color-accent))] via-[rgb(var(--color-fg-muted))] to-[rgb(var(--color-accent))] bg-clip-text text-transparent">
                 Friends
               </h1>
               <p className="text-[rgb(var(--color-fg-muted))] font-medium">

@@ -21,7 +21,7 @@ export default async function MyCommunitiesPage() {
         <header className="flex flex-col items-center text-center space-y-4">
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-none">
-            My <span className="text-[rgb(var(--color-accent))]">Spaces</span>
+            My <span className="inline bg-gradient-to-r from-[rgb(var(--color-accent))] via-[rgb(var(--color-fg-muted))] to-[rgb(var(--color-accent))] bg-clip-text text-transparent">Spaces</span>
           </h1>
           <p className="text-[rgb(var(--color-fg-muted))] max-w-xl text-lg font-medium">
             Manage your study groups, collaboration hubs, and specialized academic circles.
