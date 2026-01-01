@@ -37,11 +37,12 @@ export const authOptions: NextAuthOptions = {
             credentials.password
           );
           return {
+            _id: user._id,
             id: user._id.toString(),
             email: user.email,
             username: user.username,
             isVerified: user.isVerified
-          };
+          } as any;
         } catch (err) {
           return null;
         }
