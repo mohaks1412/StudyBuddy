@@ -8,7 +8,7 @@ import { createAnswerAction } from "../../../actions/createAnswerAction";
 export default async function AnswerPage({
   params,
 }: {
-  params: { _id: string }; // or _id depending on your folder name
+  params: Promise<{ _id: string }>;
 }) {
     const props = await params;
   const { _id } = props;

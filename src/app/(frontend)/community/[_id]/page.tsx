@@ -12,7 +12,7 @@ import { MembersOverlay } from "../../components/community/MemberOverlay";
 import { Plus, Users, ShieldCheck, Sparkles, LayoutGrid, Eye } from "lucide-react";
 
 interface CommunityPageProps {
-  params: { _id: string };
+  params: Promise<{ _id: string }>;
 }
 
 // ✅ Type definitions

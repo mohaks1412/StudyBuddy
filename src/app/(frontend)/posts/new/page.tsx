@@ -69,12 +69,18 @@ function FieldWrapper({
 }
 
 export default function NewPostPage() {
-  const { data: session } = useSession();
-  const userId = session?.user?._id;
 
+  
+  const router = useRouter();
+
+  const { data: session, status } = useSession();
+  if (status === "loading") return <CornerLoadingOverlay isVisible={true} />;
   if (!session) {
-    redirect("/sign-in");
+    router.replace("/sign-in");
+    return null;
   }
+  
+  const userId = session?.user._id;
 
   const [type, setType] = useState<PostType>("question");
   const [loading, setLoading] = useState(false);
@@ -83,7 +89,6 @@ export default function NewPostPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const searchParams = useSearchParams();
-  const router = useRouter();
   const communityId = searchParams.get("communityId");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,7 +183,7 @@ export default function NewPostPage() {
         )
       };
 
-      const res = await createPost(payload);
+      const res = await createPost(payload as any);
       router.push(`/posts/${res._id}`);
     } catch (error) {
       console.error("Post creation failed:", error);

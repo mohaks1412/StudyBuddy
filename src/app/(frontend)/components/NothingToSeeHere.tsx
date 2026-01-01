@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
-const noteVariants = {
-  sing: (i: number) => ({
+const noteVariants: Variants = {
+  sing: (i: number) : any => ({
     y: [0, -70],
     x: [0, i % 2 === 0 ? 25 : -25],
     opacity: [0, 0.6, 0],
@@ -22,7 +22,7 @@ export default function SingingBlobsOrdered() {
   const mouthColor = "rgba(255, 255, 255, 0.4)";
 
   // The Group Shear (Lean) + Group Sway (Movement)
-  const groupWarp = {
+  const groupWarp : Variants = {
     animate: {
       skewX: [-10, 10, -10], 
       x: [-12, 12, -12],     

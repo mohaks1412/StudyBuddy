@@ -9,7 +9,7 @@ import dbConnect from "@/lib/dbConnect";
 import { SocketProvider } from "../../providers/SocketProvider";
 
 interface ChatPageProps {
-  params: { receiverId: string };
+  params: Promise<{ receiverId: string }>;
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {

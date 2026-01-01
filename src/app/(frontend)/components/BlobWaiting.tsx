@@ -1,12 +1,12 @@
 // components/CornerLoadingOverlay.tsx
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 
-const blobVariants = {
-  initial: (corner: string) => ({
+const blobVariants : Variants = {
+  initial: (corner: string): any => ({
     x: corner.includes("left") ? -150 : 150,
     y: corner.includes("top") ? -150 : 150,
     rotate: corner.includes("left") ? -45 : 45,
@@ -17,7 +17,7 @@ const blobVariants = {
     rotate: 0,
     transition: { type: "spring", stiffness: 80, damping: 15 } 
   },
-  exit: (corner: string) => ({
+  exit: (corner: string) : any => ({
     x: corner.includes("left") ? -150 : 150,
     y: corner.includes("top") ? -150 : 150,
     transition: { duration: 0.3 }

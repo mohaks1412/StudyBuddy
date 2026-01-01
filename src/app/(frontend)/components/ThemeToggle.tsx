@@ -3,7 +3,7 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 
 export function ThemeToggle() {
@@ -27,24 +27,24 @@ export function ThemeToggle() {
   };
 
   // --- Overlay Animation Variants ---
-  const celestialVariants = {
+  const celestialVariants : Variants = {
     initial: { y: 150, opacity: 0, scale: 0.5 },
     animate: { y: 0, opacity: 1, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } },
     exit: { y: -150, opacity: 0, scale: 0.5, transition: { duration: 0.5 } }
   };
 
-  const eyeVariants = {
+  const eyeVariants : Variants = {
     awake: { scaleY: 1, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 20 } },
     asleep: { scaleY: 0.1, opacity: 0.4, transition: { duration: 0.4 } },
   };
 
-  const mouthVariants = {
+  const mouthVariants : Variants = {
     awake: { scale: 1, opacity: 1, y: 0 },
     asleep: { scale: 0.4, opacity: 0.3, y: 3 },
   };
 
-  const zzzVariants = {
-    animate: (i: number) => ({
+  const zzzVariants : Variants = {
+    animate: (i: number) : any => ({
       y: [-10, -80],
       x: [0, i % 2 === 0 ? 20 : -20],
       opacity: [0, 0.8, 0],

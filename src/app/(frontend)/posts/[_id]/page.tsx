@@ -75,7 +75,7 @@ function MediaRenderer({ url, title, type }: { url: string; title: string; type:
   );
 }
 
-export default async function PostPage({ params }: { params: { _id: string } }) {
+export default async function PostPage({ params }: { params: Promise<{ _id: string }> }) {
   const { _id } = await params;
   const session = await getServerSession(authOptions);
   const userId = session?.user?._id || "";
@@ -233,19 +233,19 @@ export default async function PostPage({ params }: { params: { _id: string } }) 
         </main>
 
         {/* 3. PEER INSIGHTS */}
-        {!isUnauthorized && post.type === "question" && (post as any).associate?.length > 0 && (
+        {!isUnauthorized && post.type === "question" && post.associate && post.associate.length > 0&& (
           <section className="pt-16 border-t border-[rgb(var(--color-border)/0.3)] space-y-10">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-black tracking-tight">
                 Peer <span className="text-[rgb(var(--color-accent))]">Insights.</span>
               </h2>
               <div className="px-4 py-1.5 rounded-full bg-[rgb(var(--color-bg-soft))] border border-[rgb(var(--color-border)/0.5)] text-[10px] font-black uppercase tracking-widest">
-                {(post as any).associate.length} Solutions
+                {(post).associate.length} Solutions
               </div>
             </div>
 
             <PostList
-              posts={(post as any).associate}
+              posts={(post).associate}
               filterType="all"
               title=""
             />

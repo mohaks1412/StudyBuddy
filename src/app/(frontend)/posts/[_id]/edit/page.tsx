@@ -1,6 +1,4 @@
 "use client";
-
-import React from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFormStatus } from 'react-dom';
@@ -9,20 +7,18 @@ import { getPostAction, updatePostAction } from "../../../actions/updatePostActi
 import type { Post } from "@/app/types/post";
 import { CornerLoadingOverlay } from "@/app/(frontend)/components/BlobWaiting";
 import { ArrowLeft, FileText, Sparkles, Paperclip } from "lucide-react";
-import z from "zod";
-import { TextPostSchema, DocPostSchema } from "@/schemas/post.schema";
+import { use } from "react";
 
 export default function EditPostPage({
   params,
 }: {
-  params: { _id: string };
+  params: Promise<{ _id: string }>;
 }) {
   const router = useRouter();
-  const { _id } = React.use(params);
+  const { _id } = use(params);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   
-  // ✅ ZOD VALIDATION STATE
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {

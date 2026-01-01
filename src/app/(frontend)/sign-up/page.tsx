@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring, Variants } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { GoogleLogin } from "../components/auth/GoogleLogin";
 
 // Variant for the musical notes
-const noteVariants = {
-  whistle: (i: number) => ({
+const noteVariants : Variants = {
+  whistle: (i: number) : any => ({
     y: [0, -45],
     x: [0, i % 2 === 0 ? 15 : -15],
     opacity: [0, 1, 0],
