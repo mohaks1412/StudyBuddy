@@ -9,7 +9,8 @@ import { ReactNode } from "react"
 
 export default async function DashboardLayout({ children, params }: LayoutProps) {
 
-  const {_id} = await params;
+  const props= await params;
+  const {_id} = props;
 
   return (
     <div className="min-h-screen bg-[rgb(var(--color-bg))] text-[rgb(var(--color-fg))] flex overflow-hidden">
