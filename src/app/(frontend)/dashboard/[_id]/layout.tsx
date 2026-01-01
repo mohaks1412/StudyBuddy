@@ -4,7 +4,7 @@ import { ReactNode } from "react"
 
   type LayoutProps = {
       children: ReactNode
-      params: { _id: string }
+      params: Promise<{ _id: string }>
   }
 
 export default async function DashboardLayout({ children, params }: LayoutProps) {
