@@ -5,8 +5,8 @@
 "scripts": {
   "dev": "tsx server.ts", 
   "dev:next": "next dev",    
-  "build": "next build",       
-  "start": "node server.js",   
+  "build": "next build && tsc server.ts --outDir dist --esModuleInterop",
+  "start": "NODE_ENV=production node dist/server.js",   
   "build:server": "tsc server.ts --outDir dist --esModuleInterop",
   "start:server": "node dist/server.js"
 },
