@@ -8,7 +8,6 @@ export const CreateUserSchema = z.object({
   college: z.string().min(1).max(100).optional().nullable(),
   major: z.string().min(1).max(100).optional().nullable(),
   bio: z.string().min(1).max(500).optional().nullable(),
-  
 });
 
 export type CreateUserInput = z.infer<typeof CreateUserSchema>;

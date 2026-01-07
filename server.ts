@@ -5,7 +5,7 @@ import { Server, Socket } from 'socket.io';
 import MessageService from './src/services/message.service';
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+const hostname = dev ? 'localhost' : '0.0.0.0'; 
 const port = parseInt(process.env.PORT || '3000');
 const wsPath = process.env.NEXT_PUBLIC_WS_PATH || '/ws';
 
