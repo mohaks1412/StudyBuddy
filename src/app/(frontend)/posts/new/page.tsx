@@ -13,7 +13,7 @@ import { useSession } from "next-auth/react";
 import { CornerLoadingOverlay } from "../../components/BlobWaiting";
 import { TextPostSchema, DocPostSchema } from "@/schemas/post.schema";
 
-type PostType = "question" | "answer" | "notes" | "question-paper";
+type PostType = "question" | "answer" | "notes" | "question-paper" | "mind-map";
 
 /**
  * Accessible Field Wrapper
@@ -232,12 +232,13 @@ export default function NewPostPage() {
             {/* Type Selector */}
             <div className="space-y-4">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[rgb(var(--color-fg-subtle))] ml-1">Classification</span>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3" role="radiogroup">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3" role="radiogroup">
                 {[
                   { id: "question", icon: MessageSquare, label: "Question" },
                   { id: "answer", icon: Sparkles, label: "Answer" },
                   { id: "notes", icon: BookOpen, label: "Notes" },
                   { id: "question-paper", icon: FileText, label: "Paper" },
+                  { id: "mind-map", icon: Sparkles, label: "Mind Map" },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -245,6 +246,9 @@ export default function NewPostPage() {
                     onClick={() => {
                       setType(item.id as PostType);
                       setErrors({});
+                      if(item.id === "mind-map"){
+                        redirect(`/posts/new/mindmap/?communityId=${communityId}`);
+                      }
                     }}
                     aria-checked={type === item.id}
                     className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300 ${
@@ -367,6 +371,15 @@ export default function NewPostPage() {
                 </div>
               )}
             </div>
+
+            {
+              type=="mind-map" && (
+
+                <div>
+                  
+                </div>
+              )
+            }
 
             {/* Actions */}
             <footer className="flex flex-col sm:flex-row gap-4 pt-10 border-t border-[rgb(var(--color-border)/0.5)]">

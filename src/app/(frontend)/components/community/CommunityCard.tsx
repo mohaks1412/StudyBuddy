@@ -93,8 +93,7 @@ export default function CommunityCard({
             </div>
           ) : (
             showPostsLink && (
-              <Link 
-                href={`/community/${community._id}`}
+              <div
                 className="
                   flex items-center gap-2 text-sm font-bold 
                   text-[rgb(var(--color-accent))] hover:underline
@@ -102,7 +101,7 @@ export default function CommunityCard({
               >
                 Enter
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              </div>
             )
           )}
         </div>

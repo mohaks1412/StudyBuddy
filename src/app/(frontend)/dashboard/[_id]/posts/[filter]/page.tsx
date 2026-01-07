@@ -6,7 +6,7 @@ import type { Post } from "@/app/types/post"
 import { LayoutGrid, Sparkles, User, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-const allowedFilters = ["all", "question", "answer", "notes", "question-paper"] as const
+const allowedFilters = ["all", "question", "answer", "notes", "question-paper", "mind-map"] as const
 type PostTypeFilter = (typeof allowedFilters)[number]
 
 interface PageProps {
@@ -34,15 +34,16 @@ export default async function UserPostsPage({ params }: PageProps) {
   
   const displayName = user?.name || user?.username || "this user";
 
-  // Studio-style heading logic
   let categoryLabel: string;
   switch (filterType) {
     case "question": categoryLabel = "Questions asked"; break;
     case "answer": categoryLabel = "Solutions"; break;
     case "notes": categoryLabel = "Resources"; break;
     case "question-paper": categoryLabel = "Question Bank"; break;
+    case "mind-map": categoryLabel = "Mind Maps"; break;
     default: categoryLabel = "Collection";
   }
+
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">

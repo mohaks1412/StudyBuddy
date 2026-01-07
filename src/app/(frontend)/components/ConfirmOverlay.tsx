@@ -11,8 +11,6 @@ type ConfirmOverlayProps = {
   onCancel?: () => void;
   cancelLabel?: string;
 
-  // Main action can be either a button (with onClick)
-  // or a <Link> to navigate to a route.
   primaryLabel: string;
   primaryOnClick?: () => void;
   primaryHref?: string;
@@ -32,7 +30,6 @@ export function ConfirmOverlay({
 }: ConfirmOverlayProps) {
   if (!open) return null;
 
-  // Logic: Maintain your variant check but map to the new theme variables
   const primaryClasses =
     primaryVariant === "danger"
       ? "bg-[rgb(var(--color-danger))] text-[rgb(var(--color-danger-fg))] hover:brightness-110 shadow-[rgb(var(--color-danger)/0.2)]"

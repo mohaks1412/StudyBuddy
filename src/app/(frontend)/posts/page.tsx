@@ -14,7 +14,6 @@ export default async function PostsPage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?._id || "";
 
-  // Always fetch recent posts for unauthorized users or when no communities
   const userCommunities: string[] = []; 
   const isPersonalized = userCommunities.length > 0 && !!userId;
   let posts: Post[] = [];

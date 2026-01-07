@@ -30,6 +30,8 @@ export default function FloatingDock({ userId }: SidebarProps) {
     { href: `/dashboard/${userId}/posts/answer`, label: "Answers" },
     { href: `/dashboard/${userId}/posts/notes`, label: "Notes" },
     { href: `/dashboard/${userId}/posts/question-paper`, label: "Question Papers" },
+    { href: `/dashboard/${userId}/posts/mind-map`, label: "Mind Maps" },
+
   ]
 
   return (

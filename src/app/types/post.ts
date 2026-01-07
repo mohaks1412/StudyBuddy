@@ -4,6 +4,8 @@ import { TextPostSchema, DocPostSchema } from "@/schemas/post.schema"
 export type TextPostCreateData = z.infer<typeof TextPostSchema>
 export type DocPostCreateData = z.infer<typeof DocPostSchema>
 
+import { MindMapDoc } from "@/models/MindMap.model"
+
 export interface TextPost {
   _id: string
   authorId: { _id: string; username: string; email: string }
@@ -30,5 +32,6 @@ export interface DocPost {
   updatedAt: Date
 }
 
-export type Post = TextPost | DocPost
+
+export type Post = TextPost | DocPost | MindMapDoc
 export type PostId = string

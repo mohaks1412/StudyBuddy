@@ -7,6 +7,18 @@ import {z} from "zod";
 import {del} from '@vercel/blob';
 import { Types } from "mongoose"
 import Community from "@/models/Community.model"
+import MindMapPostModel from "@/models/MindMap.model";
+import type { MindMapDoc} from "@/models/MindMap.model"
+
+type PopulatedUser = {
+  _id: string;
+  username: string;
+  email: string;
+};
+type WithPopulatedAuthor<T> = Omit<T, "authorId"> & {
+  authorId: PopulatedUser;
+};
+
 
 class PostService {
 
@@ -62,61 +74,104 @@ class PostService {
     })
   }
 
-  
-  async fetchPostsByUser(
+    
+  async  fetchPostsByUser(
     userId: string,
     options: {
-      type?: "question" | "answer" | "notes" | "question-paper"
-      limit?: number
-      page?: number
+      type?: "question" | "answer" | "notes" | "question-paper" | "mind-map";
+      limit?: number;
+      page?: number;
     } = {}
-  ): Promise<(TextPost | DocPost)[]> {
-    await dbConnect()
-    const { type, limit = 20, page = 1 } = options
+  ): Promise<(TextPost | DocPost | MindMapDoc)[]> {
+    await dbConnect();
 
+    const { type, limit = 20, page = 1 } = options;
+    const skip = (page - 1) * limit;
     
-    const [textPosts, docPosts] = await Promise.all([
-      TextPostModel.find({ 
-        authorId: userId,
-        ...(type === "question" || type === "answer"  ? { type } : {})
-      })
-      .populate("authorId", "username email")
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit),
-      
-      type === "question-paper" || type === "notes"
-        ? DocPostModel.find({ authorId: userId , ...(type && { type })})
-            .populate("authorId", "username email")
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .skip((page - 1) * limit)
-        : Promise.resolve([])
-    ])
+    if (type === "question" || type === "answer") {
+      const posts = await TextPostModel.find({ authorId: userId, type })
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip);
+      return posts as TextPost[];
+    }
 
-    return [...textPosts, ...docPosts] as (TextPost | DocPost)[]
+    if (type === "notes" || type === "question-paper") {
+      const posts = await DocPostModel.find({ authorId: userId, type })
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip);
+      return posts as DocPost[];
+    }
+
+    if (type === "mind-map") {
+      const posts = await MindMapPostModel.find({ authorId: userId })
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip);
+      return posts as MindMapDoc[];
+    }
+
+    const [textPosts, docPosts, mindMapPosts] = await Promise.all([
+      TextPostModel.find({ authorId: userId })
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip),
+
+      DocPostModel.find({ authorId: userId })
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip),
+
+      MindMapPostModel.find({ authorId: userId })
+        .populate("authorId", "username email")
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip),
+    ]);
+
+    // Optional: sort merged by createdAt desc
+    const merged = [
+      ...textPosts,
+      ...docPosts,
+      ...mindMapPosts,
+    ].sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return merged as (TextPost | DocPost | MindMapDoc)[];
   }
 
-  
-  async fetchPostById(postId: PostId): Promise<TextPost | DocPost | null> {
-    await dbConnect()
-    
-    const textPost = await TextPostModel.findById(postId)
-      .populate("authorId", "username _id")
+async fetchPostById(postId: PostId) {
+  await dbConnect();
+
+  const [textPost, docPost, mindMapPost] = await Promise.all([
+    TextPostModel.findById(postId)
+      .populate("authorId", "username email _id")
       .populate({
         path: "associate",
-        populate: {
-          path: "authorId",
-          select: "username _id",
-        },
+        populate: { path: "authorId", select: "username _id" },
       })
-      .lean();
-    
-    if (textPost) return textPost 
-    return DocPostModel.findById(postId)
-      .populate("authorId", "username email")
-  }
+      .lean(),
 
+    DocPostModel.findById(postId)
+      .populate("authorId", "username email _id")
+      .lean(),
+
+    MindMapPostModel.findById(postId)
+      .populate("authorId", "username email _id")
+      .lean()
+  ]);
+
+
+  return textPost || docPost || mindMapPost || null;
+}
   async updatePost(postId: PostId, userId: string, updateData: {
     title: string;
     subject?: string;
@@ -178,9 +233,10 @@ class PostService {
 async deletePost(postId: PostId, userId: string): Promise<boolean> {
     await dbConnect();
 
-    const [textPost, docPost] = await Promise.all([
+    const [textPost, docPost, mindmapPost] = await Promise.all([
         TextPostModel.findOne({ _id: postId, authorId: userId }),
-        DocPostModel.findOne({ _id: postId, authorId: userId })
+        DocPostModel.findOne({ _id: postId, authorId: userId }),
+        MindMapPostModel.findOne({_id: postId, authorId: userId}),
     ]);
 
     
@@ -196,6 +252,11 @@ async deletePost(postId: PostId, userId: string): Promise<boolean> {
     if (docPost) {
         await DocPostModel.findOneAndDelete({ _id: postId, authorId: userId });
         return true;
+    }
+
+    if(mindmapPost){
+      await MindMapPostModel.findOneAndDelete({_id: postId, authorId: userId})
+      return true;
     }
 
     if (textPost) {
@@ -214,104 +275,125 @@ async deletePost(postId: PostId, userId: string): Promise<boolean> {
     return false;
 }
 
-  async fetchFeedForUser(
-    userId: string,
-    communities: string[],
-    options: { limit?: number; page?: number } = {}
-  ): Promise<(TextPost | DocPost)[]> {
-    await dbConnect()
-    const { limit = 20, page = 1 } = options
+// 1. fetchFeedForUser
+async fetchFeedForUser(
+  userId: string,
+  communities: string[],
+  options: { limit?: number; page?: number } = {}
+): Promise<(TextPost | DocPost | MindMapDoc)[]> {
+  await dbConnect();
+  const { limit = 20, page = 1 } = options;
 
-    if (!communities.length) return []
+  if (!communities.length) return [];
 
-    const [textPosts, docPosts] = await Promise.all([
-      TextPostModel.find({
-        community: { $in: communities },
-      })
-        .populate("authorId", "username email")
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip((page - 1) * limit),
+  const [textPosts, docPosts, mindMapPosts] = await Promise.all([
+    TextPostModel.find({
+      community: { $in: communities },
+    })
+    .populate("authorId", "username email")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit),
 
-      DocPostModel.find({
-        community: { $in: communities },
-      })
-        .populate("authorId", "username email")
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip((page - 1) * limit),
-    ])
+    DocPostModel.find({
+      community: { $in: communities },
+    })
+    .populate("authorId", "username email")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit),
 
-    return [...textPosts, ...docPosts] as (TextPost | DocPost)[]
-  }
+    MindMapPostModel.find({
+      community: { $in: communities },
+    })
+    .populate("authorId", "username email")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit)
+  ]);
 
+  return [...textPosts, ...docPosts, ...mindMapPosts] as (TextPost | DocPost | MindMapDoc)[];
+}
 
 async fetchRecentPosts(options: { limit?: number; page?: number } = {}) {
   await dbConnect();
   const { limit = 20, page = 1 } = options;
 
-  const [textPosts, docPosts] = await Promise.all([
+  const [textPosts, docPosts, mindMapPosts] = await Promise.all([
     TextPostModel.find({})
-      .populate("authorId", "username email")
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit),
+    .populate("authorId", "username email")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit),
 
     DocPostModel.find({})
-      .populate("authorId", "username email")
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit),
+    .populate("authorId", "username email")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit),
+
+    MindMapPostModel.find({})
+    .populate("authorId", "username email")
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip((page - 1) * limit)
   ]);
 
-  return [...textPosts, ...docPosts] as (TextPost | DocPost)[];
+  return [...textPosts, ...docPosts, ...mindMapPosts] as (TextPost | DocPost | MindMapDoc)[];
 }
 
-
-  async fetchPostsByCommunity(communityId: string, options: { limit?: number; page?: number } = {}) {
-    await dbConnect();
-    
-    const communityObjectId = new Types.ObjectId(communityId);
-    const community = await Community.findById(communityObjectId);
-    if (!community) return [];
-
-    const limit = options.limit || 20;
-    const skip = (options.page || 1 - 1) * limit;
-
-    const [docPosts, textPosts] = await Promise.all([
-      DocPostModel.find({ community: community._id })
-        .populate('authorId', 'username email avatar')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip(skip)
-        .lean(),
-
-      TextPostModel.find({ community: community._id })
-        .populate('authorId', 'username email avatar')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .skip(skip)
-        .lean()
-    ]);
-
-    const merged = [...docPosts, ...textPosts].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    
-    return merged.map(this.normalizePostIds);
-  }
-
-
+// 3. fetchPostsByCommunity
+async fetchPostsByCommunity(
+  communityId: string, 
+  options: { limit?: number; page?: number } = {}
+) {
+  await dbConnect();
   
+  const communityObjectId = new Types.ObjectId(communityId);
+  const community = await Community.findById(communityObjectId);
+  if (!community) return [];
+
+  const limit = options.limit || 20;
+  const skip = (options.page || 1 - 1) * limit;
+
+  const [docPosts, textPosts, mindMapPosts] = await Promise.all([
+    DocPostModel.find({ community: community._id })
+    .populate('authorId', 'username email avatar')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(skip)
+    .lean(),
+
+    TextPostModel.find({ community: community._id })
+    .populate('authorId', 'username email avatar')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(skip)
+    .lean(),
+
+    MindMapPostModel.find({ community: community._id })
+    .populate('authorId', 'username email')
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .skip(skip)
+    .lean()
+  ]);
+
+  const merged = [...docPosts, ...textPosts, ...mindMapPosts].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  return merged.map(this.normalizePostIds);
+}
+
   async countByAuthor(userId: string) {
-    const [textPostCount, docPostCount] = await Promise.all([
+    const [textPostCount, docPostCount, mindmapCount] = await Promise.all([
       TextPostModel.countDocuments({ author: userId }),
       DocPostModel.countDocuments({ author: userId }),
+      MindMapPostModel.countDocuments({authorId : userId})
     ])
 
-    return textPostCount + docPostCount
+    return textPostCount + docPostCount + mindmapCount
   }
 
  async createAnswer(

@@ -6,6 +6,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
 import { formatDistanceToNow } from "date-fns";
 import { TextPost, DocPost } from "@/app/types/post";
+import { MindMapDoc } from "@/models/MindMap.model";
 import { 
   Pencil, Download, ExternalLink, Sparkles, 
   BookOpen, Clock, ChevronLeft, FileText, Image as ImageIcon 
@@ -13,19 +14,15 @@ import {
 import { DeletePostButton } from "@/app/(frontend)/components/post/DeletePostButton";
 import PostList from "../../components/post/PostList";
 import { CreateAnswerButton } from "../../components/post/CreateAnswerButton";
+import MindMap from "../../components/mindmap/MindMap";
 
-/**
- * Enhanced Media Renderer
- * Solves the "white space" problem by centering images and 
- * using a blurred background technique for small/aspect-ratio images.
- */
+
 function MediaRenderer({ url, title, type }: { url: string; title: string; type: string }) {
   const isImage = url.match(/\.(jpg|jpeg|png|webp|gif)$/i);
 
   if (isImage) {
     return (
       <div className="relative w-full h-[60vh] md:h-[80vh] bg-[rgb(var(--color-bg-strong)/0.1)] flex items-center justify-center overflow-hidden group/viewer">
-        {/* Ambient background blur (Atmospheric Effect) */}
         <div 
           className="absolute inset-0 blur-[100px] opacity-30 scale-125 transition-transform duration-700 group-hover/viewer:scale-110"
           style={{ 
@@ -83,15 +80,25 @@ export default async function PostPage({ params }: { params: Promise<{ _id: stri
   const post = await PostService.fetchPostById(_id);
   if (!post) notFound();
 
+  
+
   const isUnauthorized = !userId;
   const isAuthor = !isUnauthorized && userId === post.authorId?._id?.toString();
   const isDocPost = post.type === "notes" || post.type === "question-paper";
+  const isMindMapPost = post.type === "mind-map";
+  const isTextPost = !isDocPost && !isMindMapPost;
+
 
   return (
     <div className="min-h-screen bg-[rgb(var(--color-bg))] text-[rgb(var(--color-fg))] transition-colors duration-500">
-      <article className="max-w-5xl mx-auto px-6 py-12 lg:py-20 space-y-16 pb-32 animate-in fade-in duration-700">
-        
-        {/* 1. STUDIO HEADER */}
+      {/* TOP of page.tsx */}
+<article className={`
+  ${isMindMapPost 
+    ? 'max-w-none px-4 md:px-8 lg:px-12 py-20 lg:py-20 space-y-16 pb-32 animate-in fade-in duration-700' 
+    : 'max-w-5xl mx-auto px-6 py-20 space-y-16'
+  }
+`}>
+
         <header className="space-y-8">
           <Link 
             href="/posts" 
@@ -135,15 +142,17 @@ export default async function PostPage({ params }: { params: Promise<{ _id: stri
               </div>
             </div>
 
+
             {/* Author Actions */}
             {!isUnauthorized && isAuthor && (
               <div className="flex gap-2 shrink-0">
-                <Link
+                {!isMindMapPost && <Link
                   href={`/posts/${post._id}/edit`}
                   className="px-5 py-2.5 rounded-xl bg-[rgb(var(--color-bg-soft))] border border-[rgb(var(--color-border)/0.5)] text-sm font-bold hover:bg-[rgb(var(--color-fg))] hover:text-[rgb(var(--color-bg))] transition-all flex items-center gap-2 shadow-sm"
                 >
                   <Pencil size={16} /> Edit
                 </Link>
+          }
                 <DeletePostButton postId={post._id.toString()} />
               </div>
             )}
@@ -158,12 +167,24 @@ export default async function PostPage({ params }: { params: Promise<{ _id: stri
               />
             </div>
           )}
+
+        {isMindMapPost && <div className="
+          p-6 rounded-2xl border-2 border-dashed 
+          border-[rgb(var(--color-accent)/0.4)]
+          bg-gradient-to-br from-[rgb(var(--color-bg-soft)/0.5)] to-transparent
+          backdrop-blur-sm shadow-xl ring-1 ring-[rgb(var(--color-accent)/0.1)]
+          hover:border-[rgb(var(--color-accent)/0.6)] hover:shadow-2xl
+          transition-all duration-300
+        ">
+          {post.summary}
+        </div>}
+
         </header>
 
         {/* 2. MAIN CONTENT AREA */}
         <main className="space-y-12">
           {/* Text Post Layout */}
-          {(post.type === "question" || post.type === "answer") && (
+          {isTextPost && (
             <section className="relative px-2">
               <div className="absolute -left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-[rgb(var(--color-accent))] to-transparent rounded-full hidden md:block" />
               <div className="text-xl md:text-2xl leading-relaxed font-medium text-[rgb(var(--color-fg))] whitespace-pre-wrap break-words selection:bg-[rgb(var(--color-accent)/0.3)]">
@@ -230,8 +251,18 @@ export default async function PostPage({ params }: { params: Promise<{ _id: stri
               </div>
             </section>
           )}
-        </main>
+          {isMindMapPost && (
+            <section className="space-y-10 w-full">
+              
+              {/* FULL WIDTH Canvas */}
+              <div className="w-full h-[100vh] rounded-[3rem] border border-[rgb(var(--color-border)/0.5)] bg-[rgb(var(--color-bg-soft)/0.3)] overflow-hidden shadow-2xl">
+                <MindMap postId={_id} />
+              </div>
+            </section>
+          )}
 
+        </main>
+        
         {/* 3. PEER INSIGHTS */}
         {!isUnauthorized && post.type === "question" && post.associate && post.associate.length > 0&& (
           <section className="pt-16 border-t border-[rgb(var(--color-border)/0.3)] space-y-10">

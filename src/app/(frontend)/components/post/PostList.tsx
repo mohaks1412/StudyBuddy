@@ -4,7 +4,7 @@ import type { Post } from "../../../types/post";
 import NothingToSeeHere from "../NothingToSeeHere";
 import { LayoutGrid, Sparkles } from "lucide-react";
 
-const allowedFilters = ["all", "question", "answer", "notes", "question-paper"] as const;
+const allowedFilters = ["all", "question", "answer", "notes", "question-paper", "mind-map"] as const;
 type PostTypeFilter = (typeof allowedFilters)[number];
 
 interface PostListProps {
@@ -23,7 +23,9 @@ export default function PostList({
   community,
   title = "Feed Archive",
 }: PostListProps) {
-  // Logic preserved
+
+  
+  
   const filtered = posts.filter((post) => {
     const postAuthorId = post.authorId?._id?.toString() || post.authorId?.toString();
     
@@ -39,7 +41,7 @@ export default function PostList({
 
   return (
     <section className="space-y-8 animate-in fade-in duration-700">
-      {/* 1. STUDIO SECTION HEADER */}
+      
       {title && (
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3">
@@ -60,14 +62,10 @@ export default function PostList({
         </div>
       )}
 
-      {/* 2. FEED GRID */}
-      {/* Using a vertical stack with increased gap (gap-6) 
-          to let the new rounded cards breathe. 
-      */}
       <div className="flex flex-col gap-6">
         {filtered.map((post, index) => (
           <div 
-            key={post._id} 
+            key={post._id.toString()} 
             className="animate-in fade-in slide-in-from-bottom-4 duration-500"
             style={{ animationDelay: `${index * 50}ms` }}
           >

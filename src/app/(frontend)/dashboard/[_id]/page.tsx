@@ -11,6 +11,7 @@ import Link from "next/link"
 import postService from "@/services/post.service"
 import { revalidatePath } from "next/cache"
 import { Mail, Plus, GraduationCap, Book, ArrowUpRight, Clock, Eye, EyeOff } from "lucide-react"
+import {format} from 'date-fns'
 
 interface DashboardUserPageProps {
   params: { _id: string }
@@ -36,10 +37,12 @@ export default async function DashboardUserPage({ params }: DashboardUserPagePro
   const props = await params;
   const { _id } = props;
 
+
+
   // --- PUBLIC DATA FETCHING ---
   const [friendCount, postCount, result, session] = await Promise.all([
-    friendService.countFriends(_id), // ✅ Public counter
-    postService.countByAuthor(_id),  // ✅ Public counter  
+    friendService.countFriends(_id), 
+    postService.countByAuthor(_id),
     authService.findUserById(_id) as Promise<IUser | null>,
     getServerSession(authOptions),
   ])
@@ -50,6 +53,13 @@ export default async function DashboardUserPage({ params }: DashboardUserPagePro
   const currentUserId = session?.user?._id
   const isOwner = currentUserId === user._id.toString()
   const isAuthenticated = !!currentUserId
+
+  
+  const joinedAt = format(
+    new Date(user.createdAt),
+    'MMM dd, yyyy'
+  )
+  
 
   // --- AUTH-ONLY LOGIC (Safe for public access) ---
   let friendStatus: string = "rejected"
@@ -143,7 +153,7 @@ export default async function DashboardUserPage({ params }: DashboardUserPagePro
              </div>
              <div className="flex items-center gap-3 text-sm font-bold text-[rgb(var(--color-fg-muted))]">
                 <Clock className="w-4 h-4" />
-                <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+                <span>Joined {joinedAt}</span>
              </div>
           </div>
         </aside>
