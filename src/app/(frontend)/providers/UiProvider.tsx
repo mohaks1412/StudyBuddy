@@ -93,7 +93,6 @@ export const useCanvasDrag = () => {
   // 🆕 CURSOR-CENTERED WHEEL ZOOM
   const onWheel = useCallback((e: React.WheelEvent): void => {
     e.preventDefault();
-    if (e.ctrlKey) console.log('✅ Trackpad pinch: deltaY=', e.deltaY);
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -104,46 +103,68 @@ export const useCanvasDrag = () => {
 
   // 🆕 MOBILE PINCH ZOOM
   const onTouchMove = useCallback((e: React.TouchEvent): void => {
-    if (e.touches.length !== 2) return;
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+  // ─── PINCH ZOOM ───────────────────────────
+  if (e.touches.length === 2) {
     
     e.preventDefault();
 
-    const t1 = e.touches.item(0);
-    const t2 = e.touches.item(1);
-
-    if (!t1 || !t2) return;
+    const t1 = e.touches[0];
+    const t2 = e.touches[1];
 
     const dx = t1.clientX - t2.clientX;
     const dy = t1.clientY - t2.clientY;
     const distance = Math.hypot(dx, dy);
 
+    const centerX = ((t1.clientX + t2.clientX) / 2) - rect.left;
+    const centerY = ((t1.clientY + t2.clientY) / 2) - rect.top;
+
     if (lastDistanceRef.current) {
       const delta = distance / lastDistanceRef.current;
-      const centerX = (t1.clientX + t2.clientX) / 2;
-      const centerY = (t1.clientY + t2.clientY) / 2;
-
       zoomAtPoint(delta, { x: centerX, y: centerY });
     }
 
     lastDistanceRef.current = distance;
-  }, [zoomAtPoint]);
+    return;
+  }
 
-  const onTouchEnd = useCallback((): void => {
-    lastDistanceRef.current = null;
-  }, []);
+  // ─── PAN ───────────────────────────
+  if (e.touches.length === 1 && touchOrigin.current) {
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+
+    updatePan({
+      x: (x - touchOrigin.current.x) * 0.8,
+      y: (y - touchOrigin.current.y) * 0.8,
+    });
+
+    touchOrigin.current = { x, y };
+  }
+}, [zoomAtPoint, updatePan]);
+
+const onTouchEnd = useCallback((): void => {
+  lastDistanceRef.current = null;
+  touchOrigin.current = null;
+  endDrag();
+}, [endDrag]);
+
 
   const touchOrigin = useRef<{x: number, y: number} | null>(null);
 
 const onTouchStart = useCallback((e: React.TouchEvent): void => {
-  if (e.touches.length !== 1) return;
-  e.preventDefault();
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-  touchOrigin.current = {
-    x: e.touches[0].clientX - rect.left,
-    y: e.touches[0].clientY - rect.top
-  };
-  startDrag();
+
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    touchOrigin.current = {
+      x: t.clientX - rect.left,
+      y: t.clientY - rect.top,
+    };
+    startDrag();
+  }
 }, [startDrag]);
+
 
 const onTouchPanMove = useCallback((e: React.TouchEvent): void => {
   if (e.touches.length !== 1 || !touchOrigin.current) return;
