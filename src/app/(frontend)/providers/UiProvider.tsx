@@ -93,7 +93,7 @@ export const useCanvasDrag = () => {
   // 🆕 CURSOR-CENTERED WHEEL ZOOM
   const onWheel = useCallback((e: React.WheelEvent): void => {
     e.preventDefault();
-
+    if (e.ctrlKey) console.log('✅ Trackpad pinch: deltaY=', e.deltaY);
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -105,7 +105,7 @@ export const useCanvasDrag = () => {
   // 🆕 MOBILE PINCH ZOOM
   const onTouchMove = useCallback((e: React.TouchEvent): void => {
     if (e.touches.length !== 2) return;
-
+    
     e.preventDefault();
 
     const t1 = e.touches.item(0);
@@ -132,6 +132,37 @@ export const useCanvasDrag = () => {
     lastDistanceRef.current = null;
   }, []);
 
+  const touchOrigin = useRef<{x: number, y: number} | null>(null);
+
+const onTouchStart = useCallback((e: React.TouchEvent): void => {
+  if (e.touches.length !== 1) return;
+  e.preventDefault();
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  touchOrigin.current = {
+    x: e.touches[0].clientX - rect.left,
+    y: e.touches[0].clientY - rect.top
+  };
+  startDrag();
+}, [startDrag]);
+
+const onTouchPanMove = useCallback((e: React.TouchEvent): void => {
+  if (e.touches.length !== 1 || !touchOrigin.current) return;
+  //e.preventDefault();
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  const dx = (e.touches[0].clientX - rect.left) - touchOrigin.current.x;
+  const dy = (e.touches[0].clientY - rect.top) - touchOrigin.current.y;
+  updatePan({ x: dx * 0.8, y: dy * 0.8 });
+  touchOrigin.current = {  // Continuous origin
+    x: e.touches[0].clientX - rect.left,
+    y: e.touches[0].clientY - rect.top
+  };
+}, [updatePan]);
+
+const onTouchEndPan = useCallback((e: React.TouchEvent): void => {
+  touchOrigin.current = null;
+  endDrag();
+}, [endDrag]);
+
   return {
     isDragging,
     onMouseDown,
@@ -141,7 +172,10 @@ export const useCanvasDrag = () => {
     onWheel,
     onTouchMove,
     onTouchEnd,
-    resetView
+    resetView,
+    onTouchStart,
+    onTouchPanMove,
+    onTouchEndPan
   };
 };
 

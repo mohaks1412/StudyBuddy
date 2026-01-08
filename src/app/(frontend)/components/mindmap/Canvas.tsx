@@ -7,7 +7,7 @@ import { Link as LinkType, Node as NodeType } from '@/app/types/mindmap';
 
 
 export default function Canvas() {
-  const { onMouseDown, onMouseMove, onMouseUp, onMouseLeave, onWheel } = useCanvasDrag();
+  const { onMouseDown, onMouseMove, onMouseUp, onMouseLeave, onWheel, onTouchStart, onTouchPanMove, onTouchEndPan, onTouchEnd } = useCanvasDrag();
   const { zoom, panX, panY } = useUi();
 
   const {
@@ -255,6 +255,9 @@ export default function Canvas() {
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseLeave}
         onWheelCapture={onWheel}
+        onTouchStart={onTouchStart} 
+        onTouchMove={onTouchPanMove}     
+        onTouchEnd={onTouchEndPan} 
       >
         <defs>
           <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
