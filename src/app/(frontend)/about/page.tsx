@@ -1,148 +1,218 @@
-// app/(frontend)/about/page.tsx
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { Sparkles, Zap, ShieldCheck, Globe, ArrowDownRight, Command } from "lucide-react";
-import Link from "next/link";
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, ease: "easeOut" }
-};
+import React, { useEffect } from 'react';
+import { 
+  Users, 
+  BookOpen, 
+  BrainCircuit, 
+  ArrowRight, 
+  Lock, 
+  Search, 
+  Plus, 
+  MessageSquare 
+} from 'lucide-react';
+import Link from 'next/link';
 
 export default function AboutPage() {
+  // Inline Intersection Observer Logic
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.15, // Trigger when 15% of the element is visible
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, observerOptions);
+
+    // Grab all elements with the .reveal class
+    const revealedElements = document.querySelectorAll('.reveal');
+    revealedElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[rgb(var(--color-bg))] text-[rgb(var(--color-fg))] transition-colors duration-500 overflow-hidden">
+    <div className="min-h-screen font-sans selection:bg-[rgb(var(--color-accent)/0.3)] overflow-x-hidden">
       
-      {/* 1. HERO SECTION: THE MANIFESTO */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 pb-32 relative">
-        <motion.div 
-          initial="initial"
-          animate="animate"
-          variants={fadeInUp}
-          className="space-y-8 relative z-10"
-        >
-          <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-[rgb(var(--color-accent))]">
-            <Command className="w-4 h-4" />
-            System Protocol 01
-          </div>
+      {/* --- HERO SECTION --- */}
+      <section className="relative overflow-hidden pt-24 pb-16 px-6">
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          <span className="reveal inline-block py-1.5 px-4 rounded-full bg-[rgb(var(--color-accent)/0.1)] text-[rgb(var(--color-accent))] text-xs font-bold mb-6 tracking-widest uppercase">
+            A New Era of Learning
+          </span>
           
-          <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] italic">
-            Knowledge is <br />
-            <span className="text-[rgb(var(--color-fg-subtle))] opacity-20">Collective.</span>
+          <h1 className="reveal delay-100 text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
+            Master Your Subjects <br />
+            <span className="text-[rgb(var(--color-accent))]">Through Connection</span>
           </h1>
-
-          <p className="max-w-2xl text-xl md:text-2xl font-medium text-[rgb(var(--color-fg-muted))] leading-tight tracking-tight">
-            We are building a decentralized studio for thinkers, creators, and curators to share high-fidelity insights without the noise.
+          
+          <p className="reveal delay-200 max-w-2xl mx-auto text-lg md:text-xl text-[rgb(var(--color-fg-muted))] mb-10 leading-relaxed">
+            Stop studying in isolation. Bridge the gap between individual notes 
+            and collaborative insights. Explore what others are learning and share your path to mastery.
           </p>
-        </motion.div>
-
-        {/* Decorative Background Blob (Subtle) */}
-        <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-[rgb(var(--color-accent))] rounded-full blur-[120px] opacity-[0.05] pointer-events-none" />
-      </section>
-
-      {/* 2. CORE PILLARS: THE SPECS */}
-      <section className="bg-[rgb(var(--color-bg-soft)/0.3)] border-y border-[rgb(var(--color-border)/0.5)] py-24">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-16">
-          {[
-            { icon: <Zap />, title: "Velocity", desc: "Instant knowledge drops. No fluff, just the core architectural insights." },
-            { icon: <ShieldCheck />, title: "Curated", desc: "Peer-verified communities where quality is the only metric that matters." },
-            { icon: <Globe />, title: "Open Source", desc: "Built for the network, by the network. Your data, your manifesto." }
-          ].map((item, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.2 }}
-              className="space-y-4"
+          
+          <div className="reveal delay-300 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link 
+              href="/sign-in"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[rgb(var(--color-accent))] text-[rgb(var(--color-accent-fg))] font-bold shadow-xl shadow-[rgb(var(--color-accent)/0.2)] hover:brightness-110 transition-all flex items-center justify-center gap-2"
             >
-              <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--color-bg-strong))] border border-[rgb(var(--color-border))] flex items-center justify-center text-[rgb(var(--color-accent))]">
-                {item.icon}
-              </div>
-              <h3 className="text-2xl font-black tracking-tight">{item.title}</h3>
-              <p className="text-sm font-medium text-[rgb(var(--color-fg-muted))] leading-relaxed">
-                {item.desc}
-              </p>
-            </motion.div>
-          ))}
+              Get Started Now <ArrowRight size={18} />
+            </Link>
+            <Link
+              href="/posts"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[rgb(var(--color-bg-soft))] border border-border text-[rgb(var(--color-fg))] font-bold hover:bg-[rgb(var(--color-bg-strong)/0.5)] transition-all flex items-center justify-center gap-2"
+            >
+              <Search size={18} /> Browse Public Posts
+            </Link>
+          </div>
+        </div>
+
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-0 opacity-20 pointer-events-none">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-[rgb(var(--color-accent))] rounded-full blur-[120px]" />
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-[rgb(var(--color-success))] rounded-full blur-[120px]" />
         </div>
       </section>
 
-      {/* 3. INTERACTIVE VISION SECTION */}
-      <section className="max-w-6xl mx-auto px-6 py-32 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div className="space-y-12">
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none">
-            Join the <br />
-            <span className="text-[rgb(var(--color-accent))]">Network Pulse.</span>
-          </h2>
+      {/* --- CORE FEATURES SECTION --- */}
+      <section className="py-20 px-6 bg-[rgb(var(--color-bg-soft))] border-y border-border">
+        <div className="max-w-6xl mx-auto">
+          <div className="reveal text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for the Modern Student</h2>
+            <p className="text-[rgb(var(--color-fg-subtle))]">Everything you need to organize your thoughts and find your tribe.</p>
+          </div>
           
-          <div className="space-y-8">
-            <div className="flex gap-6 group">
-              <span className="text-4xl font-black opacity-10 group-hover:opacity-100 transition-opacity">01</span>
-              <div>
-                <h4 className="font-black text-lg uppercase tracking-widest mb-2">Create Identity</h4>
-                <p className="text-sm text-[rgb(var(--color-fg-muted))] leading-relaxed">Claim your unique slug and start building your knowledge footprint across diverse communities.</p>
-              </div>
-            </div>
-            <div className="flex gap-6 group">
-              <span className="text-4xl font-black opacity-10 group-hover:opacity-100 transition-opacity">02</span>
-              <div>
-                <h4 className="font-black text-lg uppercase tracking-widest mb-2">Sync Knowledge</h4>
-                <p className="text-sm text-[rgb(var(--color-fg-muted))] leading-relaxed">Upload notes, question papers, and architectural insights. Let the collective verify your expertise.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* MOCKUP / VISUAL ELEMENT */}
-        <div className="relative">
-          <div className="aspect-square rounded-[4rem] bg-[rgb(var(--color-bg-strong))] border border-[rgb(var(--color-border))] overflow-hidden shadow-2xl flex items-center justify-center p-12">
-            <div className="grid grid-cols-2 gap-4 w-full">
-              {[1, 2, 3, 4].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ 
-                    y: [0, -10, 0],
-                    rotate: i % 2 === 0 ? [0, 2, 0] : [0, -2, 0]
-                  }}
-                  transition={{ repeat: Infinity, duration: 3, delay: i * 0.5 }}
-                  className="h-32 rounded-3xl bg-[rgb(var(--color-bg-soft))] border border-[rgb(var(--color-border))] flex items-center justify-center"
-                >
-                  <Sparkles className={`w-8 h-8 opacity-20 text-[rgb(var(--color-accent))]`} />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-          {/* Decorative Tag */}
-          <div className="absolute -bottom-6 -right-6 bg-[rgb(var(--color-accent))] text-[rgb(var(--color-accent-fg))] p-6 rounded-3xl font-black uppercase text-[10px] tracking-[0.3em] shadow-2xl rotate-12">
-            Protocol Active
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FeatureCard 
+              delayClass="delay-100"
+              icon={<BrainCircuit className="text-[rgb(var(--color-accent))]" />}
+              title="Knowledge Mapping"
+              description="Turn your standard notes into visual mindmaps and question flows. It's not just about reading; it's about seeing the connections."
+            />
+            <FeatureCard 
+              delayClass="delay-200"
+              icon={<Users className="text-[rgb(var(--color-accent))]" />}
+              title="Open Communities"
+              description="Scroll through active study circles and see public discussions. Find a group that matches your specific academic interests."
+            />
+            <FeatureCard 
+              delayClass="delay-300"
+              icon={<MessageSquare className="text-[rgb(var(--color-accent))]" />}
+              title="Personal Network"
+              description="Build a list of friends and peers. Once you're in, direct messaging and private collaborations are just a click away."
+            />
           </div>
         </div>
       </section>
 
-      {/* 4. FINAL CALL TO ACTION */}
-      <section className="max-w-6xl mx-auto px-6 pb-40">
-        <div className="p-12 md:p-24 rounded-[4rem] bg-[rgb(var(--color-fg))] text-[rgb(var(--color-bg))] relative overflow-hidden flex flex-col items-center text-center space-y-10">
-          <h2 className="text-5xl md:text-8xl font-black tracking-tighter italic leading-none relative z-10">
-            Ready to <br /> contribute?
-          </h2>
+      {/* --- PUBLIC PREVIEW / LOG-IN PROMPT --- */}
+      <section className="py-24 px-6 overflow-hidden">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
+          <div className="reveal flex-1 order-2 md:order-1">
+             <div className="relative group cursor-default">
+                <div className="absolute -inset-1 bg-gradient-to-r from-[rgb(var(--color-accent))] to-[rgb(var(--color-success))] rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+                <div className="relative p-8 rounded-[2.5rem] bg-[rgb(var(--color-bg))] border border-border shadow-2xl">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex gap-2">
+                            <div className="w-3 h-3 rounded-full bg-[rgb(var(--color-danger))]" />
+                            <div className="w-3 h-3 rounded-full bg-[rgb(var(--color-warning))]" />
+                            <div className="w-3 h-3 rounded-full bg-[rgb(var(--color-success))]" />
+                        </div>
+                        <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">Public Feed Preview</div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="h-20 w-full rounded-xl bg-[rgb(var(--color-bg-soft))] flex items-center px-4 gap-4 opacity-60">
+                            <div className="w-10 h-10 rounded-full bg-[rgb(var(--color-bg-strong))]" />
+                            <div className="flex-1 space-y-2">
+                                <div className="h-3 w-1/3 bg-[rgb(var(--color-bg-strong))] rounded" />
+                                <div className="h-2 w-2/3 bg-[rgb(var(--color-bg-strong))] rounded opacity-50" />
+                            </div>
+                        </div>
+                        <div className="h-20 w-full rounded-xl bg-[rgb(var(--color-bg-soft))] flex items-center px-4 gap-4 opacity-40">
+                            <div className="w-10 h-10 rounded-full bg-[rgb(var(--color-bg-strong))]" />
+                            <div className="flex-1 space-y-2">
+                                <div className="h-3 w-1/4 bg-[rgb(var(--color-bg-strong))] rounded" />
+                                <div className="h-2 w-1/2 bg-[rgb(var(--color-bg-strong))] rounded opacity-50" />
+                            </div>
+                        </div>
+                        <div className="relative h-20 w-full rounded-xl bg-[rgb(var(--color-bg-soft))] flex items-center justify-center border border-dashed border-border overflow-hidden">
+                           <div className="absolute inset-0 bg-gradient-to-t from-[rgb(var(--color-bg-soft))] to-transparent" />
+                           <div className="flex items-center gap-2 text-[rgb(var(--color-accent))] font-bold text-sm z-10">
+                             <Lock size={16} /> Sign in to view full conversation
+                           </div>
+                        </div>
+                    </div>
+                </div>
+             </div>
+          </div>
           
-          <Link 
-            href="/sign-up"
-            className="group relative z-10 flex items-center gap-4 px-12 py-6 bg-[rgb(var(--color-accent))] text-[rgb(var(--color-accent-fg))] rounded-full font-black uppercase text-xs tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl"
-          >
-            Claim your identity
-            <ArrowDownRight className="w-5 h-5 group-hover:rotate-[-90deg] transition-transform" />
-          </Link>
-
-          {/* Background Design Element */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-black opacity-[0.03] select-none pointer-events-none">
-            STUDIO
+          <div className="reveal flex-1 order-1 md:order-2">
+            <h2 className="text-4xl font-bold mb-6 leading-tight">
+              A Window Into <br />
+              <span className="text-[rgb(var(--color-accent))]">Collective Knowledge</span>.
+            </h2>
+            <p className="text-[rgb(var(--color-fg-subtle))] mb-8 leading-relaxed">
+                Feel free to browse through public posts and explore active communities. 
+                Get a taste of how others are mapping out complex subjects. 
+                <br /><br />
+                When you're ready to join the conversation, save your own maps, 
+                or reach out to a new study partner, creating an account is just seconds away.
+            </p>
+            <ul className="space-y-4">
+                <li className="reveal delay-100 flex items-center gap-3 font-medium">
+                    <div className="w-6 h-6 rounded-full bg-[rgb(var(--color-success)/0.2)] text-[rgb(var(--color-success))] flex items-center justify-center"><Plus size={14} /></div>
+                    Create and publish your own Mind Maps
+                </li>
+                <li className="reveal delay-200 flex items-center gap-3 font-medium">
+                    <div className="w-6 h-6 rounded-full bg-[rgb(var(--color-success)/0.2)] text-[rgb(var(--color-success))] flex items-center justify-center"><Plus size={14} /></div>
+                    Participate in Community Q&A
+                </li>
+            </ul>
           </div>
         </div>
       </section>
+
+      {/* --- FOOTER CTA --- */}
+      <section className="py-20 px-6 text-center">
+        <div className="reveal max-w-4xl mx-auto p-12 rounded-[2.5rem] bg-[rgb(var(--color-bg-soft))] border border-border shadow-2xl relative overflow-hidden">
+          <h2 className="text-4xl font-bold mb-6 relative z-10">Start Your Journey</h2>
+          <p className="text-lg mb-8 text-[rgb(var(--color-fg-muted))] relative z-10 font-medium max-w-xl mx-auto">
+            Take the first step toward a more connected and visual way of learning.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <Link 
+              href="/sign-up"
+              className="px-10 py-4 rounded-2xl bg-[rgb(var(--color-accent))] text-[rgb(var(--color-accent-fg))] font-bold hover:scale-105 transition-all shadow-lg text-center"
+            >
+                Create Free Account
+            </Link>
+            <Link 
+              href="/sign-in"
+              className="px-10 py-4 rounded-2xl bg-[rgb(var(--color-bg))] border border-border text-[rgb(var(--color-fg))] font-bold hover:bg-[rgb(var(--color-bg-soft))] transition-all text-center"
+            >
+                Sign In
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description, delayClass }: { icon: React.ReactNode, title: string, description: string, delayClass: string }) {
+  return (
+    <div className={`reveal ${delayClass} p-8 rounded-[2rem] bg-[rgb(var(--color-bg))] border border-border hover:border-[rgb(var(--color-accent)/0.5)] transition-all group shadow-sm hover:shadow-xl hover:-translate-y-2`}>
+      <div className="w-14 h-14 rounded-2xl bg-[rgb(var(--color-bg-soft))] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        {icon}
+      </div>
+      <h3 className="text-xl font-bold mb-4">{title}</h3>
+      <p className="text-[rgb(var(--color-fg-muted))] leading-relaxed text-sm">
+        {description}
+      </p>
     </div>
   );
 }

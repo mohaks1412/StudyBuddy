@@ -3,7 +3,6 @@
 
 @layer base {
   :root {
-    /* 🌤️ LIGHT — bisque-beige-coffee */
     --color-bg: 250 245 235;
     --color-bg-soft: 245 240 230;
     --color-bg-strong: 220 210 195;
@@ -11,7 +10,6 @@
     --color-fg-muted: 115 105 90;
     --color-fg-subtle: 90 80 70;
     
-    /* Light theme: muted coffee accent */
     --color-accent: 120 100 80;        /* warm coffee brown */
     --color-accent-fg: 250 245 235;
     
@@ -26,7 +24,6 @@
   }
 
   .dark {
-    /* 🌙 DARK — greyish-blue + greenish-teal */
     --color-bg: 18 22 25;
     --color-bg-soft: 28 33 38;
     --color-bg-strong: 55 65 70;
@@ -34,7 +31,6 @@
     --color-fg-muted: 165 180 175;
     --color-fg-subtle: 140 155 150;
     
-    /* Dark theme: vibrant teal accent */
     --color-accent: 50 215 195;        /* greenish-teal */
     --color-accent-fg: 18 22 25;
     
@@ -58,4 +54,53 @@
   .border-border {
     border-color: rgb(var(--color-border));
   }
+}
+
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  will-change: opacity, transform;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Smooth Height Collapse */
+.msg-reveal-container {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease, 
+              transform 0.4s ease;
+}
+
+.msg-reveal-container.is-deleting {
+  grid-template-rows: 0fr !important;
+  opacity: 0 !important;
+  transform: scale(0.9) translateY(-10px);
+  pointer-events: none;
+}
+
+.msg-reveal-inner {
+  overflow: hidden;
+}
+
+@keyframes msg-delete-smooth {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateX(20px);
+  }
+}
+
+.message-deleting-anim {
+  animation: msg-delete-smooth 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
 }

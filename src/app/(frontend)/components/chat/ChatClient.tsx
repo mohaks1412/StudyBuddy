@@ -213,7 +213,7 @@ export default function ChatClient({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const MessageBubble = ({ message }: { message: Message }) => {
+const MessageBubble = ({ message }: { message: Message }) => {
     const isMine = message.sender._id === currentUserId;
     const isSelected = selectedMessages.has(message._id);
     const isDeleting = deletingMessages.has(message._id);
@@ -221,14 +221,12 @@ export default function ChatClient({
     return (
       <div 
         onClick={() => isSelecting && toggleMessage(message._id)}
-        className={`flex flex-col mb-4 group animate-in fade-in slide-in-from-bottom-2 duration-300 relative
+        className={`flex flex-col mb-4 group relative will-change-transform
           ${isSelecting ? "cursor-pointer" : ""}
-          ${isDeleting ? 'opacity-0 scale-95 transition-all duration-300' : ''}
+          ${isDeleting ? "message-deleting-anim" : "animate-in fade-in slide-in-from-bottom-2 duration-300"}
         `}
       >
         <div className={`flex w-full items-end gap-3 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
-          
-          {/* Entire bubble logic updated to be the hit-area when isSelecting */}
           <div
             className={`
               relative max-w-[75%] px-4 py-2.5 rounded-2xl transition-all duration-300
@@ -240,7 +238,6 @@ export default function ChatClient({
               ${isSelecting && !isSelected ? "opacity-60 grayscale-[0.5]" : ""}
             `}
           >
-            {/* Visual Checkmark indicator - purely decorative now, click happens on parent */}
             {isSelecting && (
                <div className={`absolute -top-2 ${isMine ? "-left-2" : "-right-2"} z-20`}>
                   <div className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center shadow-md ${isSelected ? "bg-[rgb(var(--color-danger))] border-white" : "bg-[rgb(var(--color-bg))] border-[rgb(var(--color-border))]"}`}>
@@ -249,21 +246,21 @@ export default function ChatClient({
                </div>
             )}
 
+            {/* Media/Content Logic remains untouched */}
             {message.media && (
-              <div className="mb-2 rounded-xl overflow-hidden cursor-pointer group/media" onClick={(e) => { 
+              <div className="mb-2 rounded-xl overflow-hidden cursor-pointer" onClick={(e) => { 
                 if(!isSelecting) {
                   e.stopPropagation(); 
                   openMedia(message.media!.url, message.media!.type); 
                 }
               }}>
                  {message.media.type === "image" ? (
-                   <img src={message.media.url} className="w-full object-cover max-h-60 hover:brightness-110 transition-all" alt="" />
+                   <img src={message.media.url} className="w-full object-cover max-h-60" alt="" />
                  ) : (
                    <div className="p-3 bg-[rgb(var(--color-bg)/0.2)] flex items-center gap-3 border border-white/10 rounded-xl">
                       {message.media.type === "audio" ? <Music className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
                       <div className="min-w-0">
                          <p className="text-xs font-bold truncate">{message.media.name}</p>
-                         <p className="text-[10px] opacity-60">{(message.media.size! / 1024 / 1024).toFixed(1)} MB</p>
                       </div>
                    </div>
                  )}
@@ -273,13 +270,16 @@ export default function ChatClient({
             {message.content && <p className="text-sm leading-relaxed font-medium whitespace-pre-wrap">{message.content}</p>}
           </div>
         </div>
-        <p className={`text-[9px] font-black uppercase tracking-[0.1em] text-[rgb(var(--color-fg-subtle))] opacity-40 mt-1 ${isMine ? "text-right mr-1" : "text-left ml-1"}`}>
-          {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
+        
+        {/* Only show timestamp if not deleting to keep the exit clean */}
+        {!isDeleting && (
+          <p className={`text-[9px] font-black uppercase tracking-[0.1em] text-[rgb(var(--color-fg-subtle))] opacity-40 mt-1 ${isMine ? "text-right mr-1" : "text-left ml-1"}`}>
+            {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </p>
+        )}
       </div>
     );
   };
-
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] max-w-4xl mx-auto animate-in fade-in duration-700">
       

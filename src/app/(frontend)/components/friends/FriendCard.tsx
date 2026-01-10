@@ -35,7 +35,7 @@ export default function FriendCard({
   onChat,
 }: FriendCardProps) {
   return (
-    <li className="w-full group">
+    <div className="w-full group">
       <div className="flex w-full items-center justify-between gap-4 border-b border-[rgb(var(--color-border)/0.3)] bg-transparent px-2 py-4 transition-all hover:bg-[rgb(var(--color-bg-soft)/0.3)]">
         
         {/* ✅ LEFT: Avatar + Text Details - FULLY RESTORED */}
@@ -126,6 +126,6 @@ export default function FriendCard({
           )}
         </div>
       </div>
-    </li>
+    </div>
   )
 }

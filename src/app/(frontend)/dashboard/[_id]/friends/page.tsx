@@ -6,10 +6,7 @@ import authService from "@/services/auth.service"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 import { notFound } from "next/navigation"
-import { revalidatePath } from "next/cache"
-import Link from "next/link"
-import { MessageCircle, Plus } from "lucide-react"
-import { redirect } from "next/navigation"
+import ScrollRevealWrapper from "@/app/(frontend)/components/ScrollRevealWrapper" // Import Wrapper
 import { acceptRequest, removeFriend, declineRequest, startChat } from "@/app/(frontend)/actions/friend.action"
 
 type FriendsPageProps = {
@@ -28,81 +25,80 @@ export default async function FriendsPage({ params }: FriendsPageProps) {
   if (!user) notFound()
   const currentUserId = session?.user?._id
   const isOwner = currentUserId === user._id.toString()
-  const isAuthenticated = !!currentUserId
 
-  // --- PUBLIC DATA ---
-  const friends = await friendService.getFriends(profileUserId) // ✅ Public friend list
+  const friends = await friendService.getFriends(profileUserId)
   const incoming = isOwner && currentUserId 
     ? await friendService.getIncoming(currentUserId) 
-    : [] // ✅ Owner-only incoming
-    
+    : [] 
 
   const hasPending = isOwner && incoming.length > 0
   const hasFriends = friends.length > 0
 
   return (
-  <div className="space-y-8">
-    <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[rgb(var(--color-border)/0.3)]">
-            <div className="space-y-2">
-              
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight block bg-gradient-to-r from-[rgb(var(--color-accent))] via-[rgb(var(--color-fg-muted))] to-[rgb(var(--color-accent))] bg-clip-text text-transparent">
-                Friends
-              </h1>
-              <p className="text-[rgb(var(--color-fg-muted))] font-medium">
-                Connect and collaborate with your study buddies.
-              </p>
-            </div>
-          </header>
+    <ScrollRevealWrapper>
+      <div className="space-y-12">
+        {/* HEADER */}
+        <header className="reveal flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[rgb(var(--color-border)/0.3)]">
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight block bg-gradient-to-r from-[rgb(var(--color-accent))] via-[rgb(var(--color-fg-muted))] to-[rgb(var(--color-accent))] bg-clip-text text-transparent">
+              Friends
+            </h1>
+            <p className="text-[rgb(var(--color-fg-muted))] font-medium">
+              Connect and collaborate with your study buddies.
+            </p>
+          </div>
+        </header>
     
-    {/* ✅ PENDING REQUESTS - ALWAYS INDEPENDENT */}
-    {hasPending && (
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-[rgb(var(--color-accent))]">
-          Incoming Requests
-        </h2>
-        <ul className="flex flex-col gap-3">
-          {incoming.map((req: any) => (
-            <FriendCard
-              key={req._id}
-              friend={req.from}
-              status="pending"
-              requestId={req._id}
-              profileUserId={profileUserId}  // ✅ PASS IT!
-              onAccept={acceptRequest}
-              onDecline={declineRequest}
-            />
-          ))}
-        </ul>
-      </section>
-    )}
+        {/* PENDING REQUESTS */}
+        {hasPending && (
+          <section className="reveal delay-100 space-y-4">
+            <h2 className="text-xs font-black uppercase tracking-widest text-[rgb(var(--color-accent))] px-1">
+              Incoming Requests
+            </h2>
+            <ul className="flex flex-col gap-3">
+              {incoming.map((req: any, index: number) => (
+                <li key={req._id} className={`reveal delay-${(index + 1) * 100}`}>
+                  <FriendCard
+                    friend={req.from}
+                    status="pending"
+                    requestId={req._id}
+                    profileUserId={profileUserId}
+                    onAccept={acceptRequest}
+                    onDecline={declineRequest}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-    {/* ✅ FRIENDS - INDEPENDENT */}
-    {!hasFriends ? (
-      <div className="text-center py-20">
-        <NothingToSeeHere />
-        {!isOwner && <p>{user.username} hasn't added any friends yet.</p>}
+        {/* FRIENDS LIST */}
+        <section className="reveal delay-200 space-y-4">
+          <h2 className="text-xs font-black uppercase tracking-widest text-[rgb(var(--color-accent))] px-1">
+            All Friends
+          </h2>
+          {!hasFriends ? (
+            <div className="reveal delay-300 text-center py-20 bg-[rgb(var(--color-bg-soft)/0.3)] rounded-[2rem] border border-dashed border-border">
+              <NothingToSeeHere />
+              {!isOwner && <p className="mt-4 text-[rgb(var(--color-fg-muted))]">{user.username} hasn't added any friends yet.</p>}
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {friends.map((friend: any, index: number) => (
+                <li key={friend._id} className={`reveal delay-${(index + 1) * 100}`}>
+                  <FriendCard
+                    friend={friend}
+                    status="accepted"
+                    profileUserId={profileUserId}
+                    onRemove={isOwner ? removeFriend : undefined}
+                    onChat={isOwner ? startChat : undefined}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
-    ) : (
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-[rgb(var(--color-accent))]">
-          Friends
-        </h2>
-        <ul className="flex flex-col gap-3">
-          {friends.map((friend: any) => (
-            <FriendCard
-              key={friend._id}
-              friend={friend}
-              status="accepted"
-              profileUserId={profileUserId}  // ✅ PASS IT!
-              onRemove={isOwner ? removeFriend : undefined}
-              onChat={isOwner ? startChat : undefined}
-            />
-          ))}
-        </ul>
-      </section>
-    )}
-
-    {/* UNAUTH CTA - unchanged */}
-  </div>
-)
+    </ScrollRevealWrapper>
+  )
 }

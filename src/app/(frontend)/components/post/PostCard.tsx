@@ -6,7 +6,7 @@ import { formatDistanceToNow, isValid } from "date-fns";
 import communityService from "@/services/community.service";
 import { 
   HelpCircle, Lightbulb, BookOpen, FileText, 
-  Paperclip, Clock, Hash 
+  Paperclip, Clock, BrainCircuit
 } from "lucide-react";
 
 interface PostCardProps {
@@ -25,7 +25,7 @@ function getTypeIcon(type: string) {
     case "answer": return <Lightbulb className="w-3.5 h-3.5" />;
     case "notes": return <BookOpen className="w-3.5 h-3.5" />;
     case "question-paper": return <FileText className="w-3.5 h-3.5" />;
-    default: return <Hash className="w-3.5 h-3.5" />;
+    default: return <BrainCircuit className="w-3.5 h-3.5" />;
   }
 }
 
